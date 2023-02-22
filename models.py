@@ -177,16 +177,26 @@ class MultiPeriodDiscriminator(torch.nn.Module):
         ])
 
     def forward(self, y, y_hat):
+        """
+        Args:
+            y     - real
+            y_hat - generated
+        Returns:
+            y_d_rs  :: List[] - MPD(y)
+            y_d_gs  :: List[] - MPD(y_hat)
+            fmap_rs :: List[] - feature map of MPD(y)
+            fmap_gs :: List[] - feature map of MPD(y_hat)
+        """
         y_d_rs = []
         y_d_gs = []
         fmap_rs = []
         fmap_gs = []
-        for i, d in enumerate(self.discriminators):
+        for _, d in enumerate(self.discriminators):
             y_d_r, fmap_r = d(y)
             y_d_g, fmap_g = d(y_hat)
             y_d_rs.append(y_d_r)
-            fmap_rs.append(fmap_r)
             y_d_gs.append(y_d_g)
+            fmap_rs.append(fmap_r)
             fmap_gs.append(fmap_g)
 
         return y_d_rs, y_d_gs, fmap_rs, fmap_gs
@@ -262,6 +272,12 @@ def feature_loss(fmap_r, fmap_g):
 
 
 def discriminator_loss(disc_real_outputs, disc_generated_outputs):
+    """
+    Returns:
+        loss - Sum of real loss and generated loss
+        r_losses
+        g_losses
+    """
     loss = 0
     r_losses = []
     g_losses = []
@@ -276,6 +292,11 @@ def discriminator_loss(disc_real_outputs, disc_generated_outputs):
 
 
 def generator_loss(disc_outputs):
+    """
+    Returns:
+        loss - sum of generator loss
+        gen_losses - List of each losses
+    """
     loss = 0
     gen_losses = []
     for dg in disc_outputs:
