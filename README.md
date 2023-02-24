@@ -35,4 +35,4 @@ year={2022},
 * https://github.com/jik876/hifi-gan
 
 [paper]: https://arxiv.org/abs/2203.02395
-[notebook]: https://colab.research.google.com/github/tarepan/iSTFTNet-pytorch/blob/main/istftnet.ipynb
+[notebook]: https://colab.research.google.com/github/tarepan/iSTFTNet-unofficial/blob/main/istftnet.ipynb
