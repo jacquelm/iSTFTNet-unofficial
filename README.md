@@ -1,17 +1,27 @@
-# iSTFTNet : Fast and Lightweight Mel-spectrogram Vocoder Incorporating Inverse Short-time Fourier Transform
-This repo try to implement [iSTFTNet : Fast and Lightweight Mel-spectrogram Vocoder Incorporating Inverse Short-time Fourier Transform](https://arxiv.org/pdf/2203.02395.pdf) specifically model `C8C8I`.
+<div align="center">
+
+# iSTFTNet : Light weight convolutional vocoder with iSTFT <!-- omit in toc -->
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)][notebook]
+[![Paper](http://img.shields.io/badge/paper-arxiv.2203.02395-B31B1B.svg)][paper]
+
+</div>
+
+Clone of unofficial implementation of iSTFTNet.  
+Model `C8C8I` is implemented.  
+
 ![](iSTFTnet.PNG)
-`Disclaimer : This repo is build for testing purpose. The code is not optimized for performance.`
-## Training :
-```
+
+## Features
+* Audio quality: keeping good quality
+* Training time: 30 % less time
+* Inference speed: 60 % faster
+
+## Training
+```bash
 python train.py --config config_v1.json
 ```
 
-## Note:
-* We are able to get good quality of audio with 30 % less training compared to original hifigan.
-* This model approx 60 % faster than counterpart hifigan.
-
-## Citations :
+## Citations
 ```
 @inproceedings{kaneko2022istftnet,
 title={{iSTFTNet}: Fast and Lightweight Mel-Spectrogram Vocoder Incorporating Inverse Short-Time Fourier Transform},
@@ -23,3 +33,6 @@ year={2022},
 
 ## References:
 * https://github.com/jik876/hifi-gan
+
+[paper]: https://arxiv.org/abs/2203.02395
+[notebook]: https://colab.research.google.com/github/tarepan/iSTFTNet-pytorch/blob/main/istftnet.ipynb
