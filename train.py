@@ -102,9 +102,9 @@ def train(a, h):
             #### Step #####################################################################
             start_b = time.time()
             x, y, _, y_mel = batch
-            x = torch.autograd.Variable(x.to(device, non_blocking=True))
-            y = torch.autograd.Variable(y.to(device, non_blocking=True))
-            y_mel = torch.autograd.Variable(y_mel.to(device, non_blocking=True))
+            x     =     x.to(device, non_blocking=True)
+            y     =     y.to(device, non_blocking=True)
+            y_mel = y_mel.to(device, non_blocking=True)
             y = y.unsqueeze(1)
 
             # Name Convention
@@ -116,8 +116,7 @@ def train(a, h):
             ## for G & D
             spec, phase = generator(x)
             y_g_hat = stft.inverse(spec, phase)
-            y_g_hat_mel = mel_spectrogram(y_g_hat.squeeze(1), h.n_fft, h.num_mels, h.sampling_rate, h.hop_size, h.win_size,
-                                          h.fmin, h.fmax_for_loss)
+            y_g_hat_mel = mel_spectrogram(y_g_hat.squeeze(1), h.n_fft, h.num_mels, h.sampling_rate, h.hop_size, h.win_size, h.fmin, h.fmax_for_loss)
 
             #### Discriminators ##########################################
             optim_d.zero_grad()
@@ -125,9 +124,9 @@ def train(a, h):
             y_df_hat_r, y_df_hat_g, _, _ = mpd(y, y_g_hat.detach())
             y_ds_hat_r, y_ds_hat_g, _, _ = msd(y, y_g_hat.detach())
             # Loss
-            loss_disc_f, _, _ = discriminator_loss(y_df_hat_r, y_df_hat_g)
-            loss_disc_s, _, _ = discriminator_loss(y_ds_hat_r, y_ds_hat_g)
-            loss_disc_all = loss_disc_s + loss_disc_f
+            loss_disc_f = discriminator_loss(y_df_hat_r, y_df_hat_g)
+            loss_disc_s = discriminator_loss(y_ds_hat_r, y_ds_hat_g)
+            loss_disc_all = loss_disc_f + loss_disc_s
             # Backward
             ## Generated `y_g_hat` is detached, so grad is never propagated to G
             loss_disc_all.backward()
@@ -143,39 +142,40 @@ def train(a, h):
             # Loss
             loss_fm_f = feature_loss(fmap_f_r, fmap_f_g)
             loss_fm_s = feature_loss(fmap_s_r, fmap_s_g)
-            loss_gen_f, _ = generator_loss(y_df_hat_g)
-            loss_gen_s, _ = generator_loss(y_ds_hat_g)
+            loss_gen_f = generator_loss(y_df_hat_g)
+            loss_gen_s = generator_loss(y_ds_hat_g)
             loss_mel = F.l1_loss(y_mel, y_g_hat_mel) * 45
-            loss_gen_all = loss_gen_s + loss_gen_f + loss_fm_s + loss_fm_f + loss_mel
+            loss_gen_all = loss_gen_f + loss_gen_s + loss_fm_f + loss_fm_s + loss_mel
             # Backward
             loss_gen_all.backward()
             # Optim
             optim_g.step()
             #### /Generators #############################################
 
-            # STDOUT logging
+            # Logging of training results
+            ## STDOUT
             if steps % a.stdout_interval == 0:
                 with torch.no_grad():
                     mel_error = F.l1_loss(y_mel, y_g_hat_mel).item()
-
                 print('Steps : {:d}, Gen Loss Total : {:4.3f}, Mel-Spec. Error : {:4.3f}, s/b : {:4.3f}'.
                         format(steps, loss_gen_all, mel_error, time.time() - start_b))
+            ## Tensorboard
+            if steps % a.summary_interval == 0:
+                sw.add_scalar("training/gen_loss_total", loss_gen_all, steps)
+                sw.add_scalar("training/mel_spec_error", mel_error,    steps)
 
-            # checkpointing
+            # Checkpointing
             if steps % a.checkpoint_interval == 0 and steps != 0:
                 checkpoint_path = "{}/g_{:08d}".format(a.checkpoint_path, steps)
                 save_checkpoint(checkpoint_path, {'generator': generator.state_dict()})
                 checkpoint_path = "{}/do_{:08d}".format(a.checkpoint_path, steps)
                 save_checkpoint(checkpoint_path, 
-                                {'mpd': mpd.state_dict(),
+                                {
+                                    'mpd': mpd.state_dict(),
                                     'msd': msd.state_dict(),
-                                    'optim_g': optim_g.state_dict(), 'optim_d': optim_d.state_dict(), 'steps': steps,
-                                    'epoch': epoch})
-
-            # Tensorboard summary logging
-            if steps % a.summary_interval == 0:
-                sw.add_scalar("training/gen_loss_total", loss_gen_all, steps)
-                sw.add_scalar("training/mel_spec_error", mel_error, steps)
+                                    'optim_g': optim_g.state_dict(), 'optim_d': optim_d.state_dict(),
+                                    'steps': steps, 'epoch': epoch,
+                                })
 
             # Validation
             if steps % a.validation_interval == 0:
