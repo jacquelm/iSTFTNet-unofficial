@@ -47,6 +47,8 @@ hann_window = {}
 
 
 def mel_spectrogram(y, n_fft, num_mels, sampling_rate, hop_size, win_size, fmin, fmax, center=False):
+    """
+    """
     if torch.min(y) < -1.:
         print('min value is ', torch.min(y))
     if torch.max(y) > 1.:
@@ -73,9 +75,20 @@ def mel_spectrogram(y, n_fft, num_mels, sampling_rate, hop_size, win_size, fmin,
 
 
 def get_dataset_filelist(a):
+    """Extract file name list from scripts.
+    
+    Args:
+        a
+            .input_training_file
+            .input_validation_file
+            .input_wavs_dir
+    Returns:
+        training_files   :: List[str] - List of .wav file path, f'{input_wavs_dir}/LJ{NNNN}-{NNNN}.wav'
+        validation_files :: List[str] - List of .wav file path, f'{input_wavs_dir}/LJ{NNNN}-{NNNN}.wav'
+    """
     with open(a.input_training_file, 'r', encoding='utf-8') as fi:
-        training_files = [os.path.join(a.input_wavs_dir, x.split('|')[0] + '.wav')
-                          for x in fi.read().split('\n') if len(x) > 0]
+        training_files   = [os.path.join(a.input_wavs_dir, x.split('|')[0] + '.wav')
+                            for x in fi.read().split('\n') if len(x) > 0]
 
     with open(a.input_validation_file, 'r', encoding='utf-8') as fi:
         validation_files = [os.path.join(a.input_wavs_dir, x.split('|')[0] + '.wav')
@@ -87,6 +100,12 @@ class MelDataset(torch.utils.data.Dataset):
     def __init__(self, training_files, segment_size, n_fft, num_mels,
                  hop_size, win_size, sampling_rate,  fmin, fmax, split=True, shuffle=True, n_cache_reuse=1,
                  device=None, fmax_loss=None, fine_tuning=False, base_mels_path=None):
+        """
+        Args:
+            training_files - item .wav file path list (not restricted to training purpose)
+
+            base_mels_path
+        """
         self.audio_files = training_files
         random.seed(1234)
         if shuffle:
@@ -109,9 +128,11 @@ class MelDataset(torch.utils.data.Dataset):
         self.base_mels_path = base_mels_path
 
     def __getitem__(self, index):
+        # filename == f'{input_wavs_dir}/LJ{NNNN}-{NNNN}.wav'
         filename = self.audio_files[index]
         if self._cache_ref_count == 0:
             audio, sampling_rate = load_wav(filename)
+            # audio :: [-1.0, +1.0]
             audio = audio / MAX_WAV_VALUE
             if not self.fine_tuning:
                 audio = normalize(audio) * 0.95

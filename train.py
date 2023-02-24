@@ -224,22 +224,24 @@ def train(a, h):
 def main():
     print('Initializing Training Process..')
 
+    # Arguments
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('--group_name', default=None)
-    parser.add_argument('--input_wavs_dir', default='LJSpeech-1.1/wavs')
+    ## Data/Model
+    parser.add_argument('--input_wavs_dir', default='LJSpeech-1.1/wavs') # Directory directly under which .wav files exist
     parser.add_argument('--input_mels_dir', default='ft_dataset')
-    parser.add_argument('--input_training_file', default='LJSpeech-1.1/training.txt')
-    parser.add_argument('--input_validation_file', default='LJSpeech-1.1/validation.txt')
+    parser.add_argument('--input_training_file',   default='LJSpeech-1.1/training.txt')   # .wav file name list for training
+    parser.add_argument('--input_validation_file', default='LJSpeech-1.1/validation.txt') # .wav file name list for training
     parser.add_argument('--checkpoint_path', default='cp_hifigan')
+    ## Config
     parser.add_argument('--config', default='')
     parser.add_argument('--training_epochs', default=3100, type=int)
-    parser.add_argument('--stdout_interval', default=5, type=int)
-    parser.add_argument('--checkpoint_interval', default=5000, type=int)
-    parser.add_argument('--summary_interval', default=100, type=int)
-    parser.add_argument('--validation_interval', default=1000, type=int)
     parser.add_argument('--fine_tuning', default=False, type=bool)
-
+    ## Logging/Monitoring
+    parser.add_argument('--stdout_interval',     default=   5, type=int)
+    parser.add_argument('--checkpoint_interval', default=5000, type=int)
+    parser.add_argument('--summary_interval',    default= 100, type=int)
+    parser.add_argument('--validation_interval', default=1000, type=int)
+    ## Parse
     a = parser.parse_args()
 
     with open(a.config) as f:
