@@ -1,9 +1,34 @@
+"""
+General utilities for experiments.
+No ML model code is included.
+"""
+
 import glob
 import os
+import shutil
 import matplotlib
 import torch
+from scipy.io.wavfile import read
 matplotlib.use("Agg")
 import matplotlib.pylab as plt
+
+
+def load_wav(full_path):
+    sampling_rate, data = read(full_path)
+    return data, sampling_rate
+
+
+class AttrDict(dict):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__dict__ = self
+
+
+def build_env(config, config_name, path):
+    t_path = os.path.join(path, config_name)
+    if config != t_path:
+        os.makedirs(path, exist_ok=True)
+        shutil.copyfile(config, os.path.join(path, config_name))
 
 
 def plot_spectrogram(spectrogram):
@@ -16,16 +41,6 @@ def plot_spectrogram(spectrogram):
     plt.close()
 
     return fig
-
-
-def init_weights(m, mean=0.0, std=0.01):
-    classname = m.__class__.__name__
-    if classname.find("Conv") != -1:
-        m.weight.data.normal_(mean, std)
-
-
-def get_padding(kernel_size, dilation=1):
-    return int((kernel_size*dilation - dilation)/2)
 
 
 def load_checkpoint(filepath, device):

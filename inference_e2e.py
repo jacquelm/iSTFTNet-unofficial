@@ -6,17 +6,13 @@ import argparse
 import json
 import torch
 from scipy.io.wavfile import write
-from env import AttrDict
 from meldataset import MAX_WAV_VALUE
 from models import Generator
 from stft import TorchSTFT
-from utils import load_checkpoint
-
-h = None
-device = None
+from utils import AttrDict, load_checkpoint
 
 
-def inference(a):
+def inference(a, h, device):
     generator = Generator(h).to(device)
     stft = TorchSTFT(filter_length=h.gen_istft_n_fft, hop_length=h.gen_istft_hop_size, win_length=h.gen_istft_n_fft).to(device)
     state_dict_g = load_checkpoint(a.checkpoint_file, device)
@@ -56,19 +52,18 @@ def main():
     with open(config_file) as f:
         data = f.read()
 
-    global h
     json_config = json.loads(data)
     h = AttrDict(json_config)
 
     torch.manual_seed(h.seed)
-    global device
+
     if torch.cuda.is_available():
         torch.cuda.manual_seed(h.seed)
         device = torch.device('cuda')
     else:
         device = torch.device('cpu')
 
-    inference(a)
+    inference(a, h, device)
 
 
 if __name__ == '__main__':

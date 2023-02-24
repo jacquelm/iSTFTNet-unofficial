@@ -5,15 +5,10 @@ import torch
 import torch.utils.data
 import numpy as np
 from librosa.util import normalize
-from scipy.io.wavfile import read
 from librosa.filters import mel as librosa_mel_fn
+from utils import load_wav
 
 MAX_WAV_VALUE = 32768.0
-
-
-def load_wav(full_path):
-    sampling_rate, data = read(full_path)
-    return data, sampling_rate
 
 
 def spectral_normalize_torch(magnitudes):

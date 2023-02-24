@@ -5,21 +5,13 @@ import argparse
 import json
 import torch
 from scipy.io.wavfile import write
-from env import AttrDict
-from meldataset import mel_spectrogram, MAX_WAV_VALUE, load_wav
+from meldataset import mel_spectrogram, MAX_WAV_VALUE
 from models import Generator
 from stft import TorchSTFT
-from utils import load_checkpoint
-
-h = None
-device = None
+from utils import load_wav, AttrDict, load_checkpoint
 
 
-def get_mel(x):
-    return mel_spectrogram(x, h.n_fft, h.num_mels, h.sampling_rate, h.hop_size, h.win_size, h.fmin, h.fmax)
-
-
-def inference(a):
+def inference(a, h, device):
     generator = Generator(h).to(device)
     stft = TorchSTFT(filter_length=h.gen_istft_n_fft, hop_length=h.gen_istft_hop_size, win_length=h.gen_istft_n_fft).to(device)
 
@@ -37,7 +29,7 @@ def inference(a):
             wav, _ = load_wav(os.path.join(a.input_wavs_dir, filname))
             wav = wav / MAX_WAV_VALUE
             wav = torch.FloatTensor(wav).to(device)
-            x = get_mel(wav.unsqueeze(0))
+            x = mel_spectrogram(wav.unsqueeze(0), h.n_fft, h.num_mels, h.sampling_rate, h.hop_size, h.win_size, h.fmin, h.fmax)
             spec, phase = generator(x)
             y_g_hat = stft.inverse(spec, phase)
             audio = y_g_hat.squeeze()
@@ -62,19 +54,19 @@ def main():
     with open(config_file) as f:
         data = f.read()
 
-    global h
     json_config = json.loads(data)
     h = AttrDict(json_config)
 
     torch.manual_seed(h.seed)
-    global device
+
     if torch.cuda.is_available():
         torch.cuda.manual_seed(h.seed)
         device = torch.device('cuda')
     else:
         device = torch.device('cpu')
 
-    inference(a)
+    # Run
+    inference(a, h, device)
 
 
 if __name__ == '__main__':
