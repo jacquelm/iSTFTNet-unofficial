@@ -30,29 +30,22 @@ from scipy.signal import get_window
 
 
 class TorchSTFT(torch.nn.Module):
+    """Wrapper of non-learnable iSTFT."""
     def __init__(self, filter_length=800, hop_length=200, win_length=800, window='hann'):
         super().__init__()
         self.filter_length = filter_length
         self.hop_length = hop_length
         self.win_length = win_length
+        # As `Parameter` because of utilities (e.g. `.to()`)
         self.window = torch.nn.Parameter(torch.from_numpy(get_window(window, win_length, fftbins=True).astype(np.float32)))
 
-    def transform(self, input_data):
-        forward_transform = torch.stft(
-            input_data,
-            self.filter_length, self.hop_length, self.win_length, window=self.window,
-            return_complex=True)
-
-        return torch.abs(forward_transform), torch.angle(forward_transform)
-
     def inverse(self, magnitude, phase):
-        inverse_transform = torch.istft(
-            magnitude * torch.exp(phase * 1j),
-            self.filter_length, self.hop_length, self.win_length, window=self.window)
+        """iSTFT."""
+        complex_spectrogram = magnitude * torch.exp(phase * 1j)
+        inverse_transform = torch.istft(complex_spectrogram, self.filter_length, self.hop_length, self.win_length, window=self.window)
 
         return inverse_transform.unsqueeze(-2)  # unsqueeze to stay consistent with conv_transpose1d implementation
 
-    def forward(self, input_data):
-        self.magnitude, self.phase = self.transform(input_data)
-        reconstruction = self.inverse(self.magnitude, self.phase)
-        return reconstruction
+    def forward(self):
+        # Not used
+        pass
