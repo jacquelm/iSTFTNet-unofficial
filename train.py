@@ -8,14 +8,10 @@ import json
 import torch
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
-from torch.utils.data import DistributedSampler, DataLoader
-import torch.multiprocessing as mp
-from torch.distributed import init_process_group
-from torch.nn.parallel import DistributedDataParallel
+from torch.utils.data import DataLoader
 from env import AttrDict, build_env
 from meldataset import MelDataset, mel_spectrogram, get_dataset_filelist
-from models import Generator, MultiPeriodDiscriminator, MultiScaleDiscriminator, feature_loss, generator_loss,\
-    discriminator_loss
+from models import Generator, MultiPeriodDiscriminator, MultiScaleDiscriminator, feature_loss, generator_loss, discriminator_loss
 from utils import plot_spectrogram, scan_checkpoint, load_checkpoint, save_checkpoint
 from stft import TorchSTFT
 
@@ -69,24 +65,14 @@ def train(a, h):
 
     # Data
     training_filelist, validation_filelist = get_dataset_filelist(a)
-    trainset = MelDataset(training_filelist, h.segment_size, h.n_fft, h.num_mels,
-                          h.hop_size, h.win_size, h.sampling_rate, h.fmin, h.fmax, n_cache_reuse=0,
-                          shuffle=True, fmax_loss=h.fmax_for_loss, device=device,
-                          fine_tuning=a.fine_tuning, base_mels_path=a.input_mels_dir)
-    train_loader = DataLoader(trainset, num_workers=h.num_workers, shuffle=False,
-                              sampler=None,
-                              batch_size=h.batch_size,
-                              pin_memory=True,
-                              drop_last=True)
+    trainset = MelDataset(training_filelist,   h.segment_size, h.n_fft, h.num_mels,
+                          h.hop_size, h.win_size, h.sampling_rate, h.fmin, h.fmax, split=True,
+                          shuffle=True,  fmax_loss=h.fmax_for_loss, fine_tuning=a.fine_tuning, base_mels_path=a.input_mels_dir)
+    train_loader = DataLoader(trainset, num_workers=h.num_workers, shuffle=False, batch_size=h.batch_size, pin_memory=True, drop_last=True)
     validset = MelDataset(validation_filelist, h.segment_size, h.n_fft, h.num_mels,
-                            h.hop_size, h.win_size, h.sampling_rate, h.fmin, h.fmax, False, False, n_cache_reuse=0,
-                            fmax_loss=h.fmax_for_loss, device=device, fine_tuning=a.fine_tuning,
-                            base_mels_path=a.input_mels_dir)
-    validation_loader = DataLoader(validset, num_workers=1, shuffle=False,
-                                    sampler=None,
-                                    batch_size=1,
-                                    pin_memory=True,
-                                    drop_last=True)
+                          h.hop_size, h.win_size, h.sampling_rate, h.fmin, h.fmax, split=False,
+                          shuffle=False, fmax_loss=h.fmax_for_loss, fine_tuning=a.fine_tuning, base_mels_path=a.input_mels_dir)
+    validation_loader = DataLoader(validset, num_workers=1, shuffle=False, batch_size=1, pin_memory=True, drop_last=True)
 
     sw = SummaryWriter(os.path.join(a.checkpoint_path, 'logs'))
 
@@ -96,9 +82,9 @@ def train(a, h):
     for epoch in range(max(0, last_epoch), a.training_epochs):
         #### Epoch ########################################################################
         start = time.time()
-        print("Epoch: {}".format(epoch+1))
+        print(f"Epoch: {epoch+1}")
 
-        for i, batch in enumerate(train_loader):
+        for _, batch in enumerate(train_loader):
             #### Step #####################################################################
             start_b = time.time()
             x, y, _, y_mel = batch
@@ -190,8 +176,7 @@ def train(a, h):
                         y_g_hat = stft.inverse(spec, phase)
 
                         y_mel = torch.autograd.Variable(y_mel.to(device, non_blocking=True))
-                        y_g_hat_mel = mel_spectrogram(y_g_hat.squeeze(1), h.n_fft, h.num_mels, h.sampling_rate,
-                                                        h.hop_size, h.win_size, h.fmin, h.fmax_for_loss)
+                        y_g_hat_mel = mel_spectrogram(y_g_hat.squeeze(1), h.n_fft, h.num_mels, h.sampling_rate, h.hop_size, h.win_size, h.fmin, h.fmax_for_loss)
                         val_err_tot += F.l1_loss(y_mel, y_g_hat_mel).item()
 
                         if j <= 4:
@@ -200,9 +185,7 @@ def train(a, h):
                                 sw.add_figure('gt/y_spec_{}'.format(j), plot_spectrogram(x[0]), steps)
 
                             sw.add_audio('generated/y_hat_{}'.format(j), y_g_hat[0], steps, h.sampling_rate)
-                            y_hat_spec = mel_spectrogram(y_g_hat.squeeze(1), h.n_fft, h.num_mels,
-                                                            h.sampling_rate, h.hop_size, h.win_size,
-                                                            h.fmin, h.fmax)
+                            y_hat_spec = mel_spectrogram(y_g_hat.squeeze(1), h.n_fft, h.num_mels, h.sampling_rate, h.hop_size, h.win_size, h.fmin, h.fmax)
                             sw.add_figure('generated/y_hat_spec_{}'.format(j),
                                             plot_spectrogram(y_hat_spec.squeeze(0).cpu().numpy()), steps)
 
