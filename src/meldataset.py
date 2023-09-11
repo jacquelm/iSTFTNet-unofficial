@@ -35,10 +35,10 @@ def mel_spectrogram(y, n_fft, num_mels, sampling_rate, hop_size, win_size, fmin,
     """
     center = False
 
-    if torch.min(y) < -1.0:
-        print("min value is ", torch.min(y))
-    if torch.max(y) > 1.0:
-        print("max value is ", torch.max(y))
+    # if torch.min(y) < -1.0:
+    #     print("min value is ", torch.min(y))
+    # if torch.max(y) > 1.0:
+    #     print("max value is ", torch.max(y))
 
     global mel_basis, hann_window
     if fmax not in mel_basis:
