@@ -150,7 +150,7 @@ class MelDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         # filename == f'{input_wavs_dir}/LJ{NNNN}-{NNNN}.wav'
         filename = self.audio_files[index]
-        audio, sampling_rate = load_wav(filename)
+        audio, sampling_rate = load_wav(filename, self.sampling_rate)
         # audio :: [-1.0, +1.0]
         audio = audio / MAX_WAV_VALUE
         if not self.fine_tuning:

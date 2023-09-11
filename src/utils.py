@@ -7,14 +7,18 @@ import glob
 import os
 import shutil
 import matplotlib
+import librosa
 import torch
 from scipy.io.wavfile import read
+
 matplotlib.use("Agg")
 import matplotlib.pylab as plt
 
 
-def load_wav(full_path):
-    sampling_rate, data = read(full_path)
+def load_wav(full_path, sr):
+    # sampling_rate, data = read(full_path)
+    data, sampling_rate = librosa.load(full_path, sr)
+    data = 0.95 * librosa.util.normalize(data)
     return data, sampling_rate
 
 
@@ -33,8 +37,7 @@ def build_env(config, config_name, path):
 
 def plot_spectrogram(spectrogram):
     fig, ax = plt.subplots(figsize=(10, 2))
-    im = ax.imshow(spectrogram, aspect="auto", origin="lower",
-                   interpolation='none')
+    im = ax.imshow(spectrogram, aspect="auto", origin="lower", interpolation="none")
     plt.colorbar(im, ax=ax)
 
     fig.canvas.draw()
@@ -58,7 +61,7 @@ def save_checkpoint(filepath, obj):
 
 
 def scan_checkpoint(cp_dir, prefix):
-    pattern = os.path.join(cp_dir, prefix + '????????')
+    pattern = os.path.join(cp_dir, prefix + "????????")
     cp_list = glob.glob(pattern)
     if len(cp_list) == 0:
         return None
