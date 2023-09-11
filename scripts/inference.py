@@ -63,7 +63,7 @@ def inference(a, h, device):
             audio = audio.cpu().numpy().astype("int16")
 
             output_file = os.path.join(
-                a.output_dir, os.path.splitext(filname)[0] + "_generated.wav"
+                a.output_dir, os.path.splitext(filname)[0] + "_generated." + a.ext
             )
             write(output_file, h.sampling_rate, audio)
             print(output_file)
@@ -76,6 +76,7 @@ def main():
     parser.add_argument("--input_wavs_dir", default="test_files")
     parser.add_argument("--output_dir", default="generated_files")
     parser.add_argument("--checkpoint_file", required=True)
+    parser.add_argument("--ext", default="wav")
     a = parser.parse_args()
 
     config_file = os.path.join(os.path.split(a.checkpoint_file)[0], "config.json")

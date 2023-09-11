@@ -350,6 +350,7 @@ def main():
         "--input_validation_file", default="LJSpeech-1.1/validation.txt"
     )  # .wav file name list for training
     parser.add_argument("--checkpoint_path", default="cp_hifigan")
+    parser.add_argument("--ext", default="wav")
     ## Config
     parser.add_argument("--config", default="")
     parser.add_argument("--training_epochs", default=3100, type=int)

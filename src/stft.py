@@ -31,20 +31,35 @@ from scipy.signal import get_window
 
 class TorchSTFT(torch.nn.Module):
     """Wrapper of non-learnable iSTFT."""
-    def __init__(self, filter_length=800, hop_length=200, win_length=800, window='hann'):
+
+    def __init__(
+        self, filter_length=800, hop_length=200, win_length=800, window="hann"
+    ):
         super().__init__()
         self.filter_length = filter_length
         self.hop_length = hop_length
         self.win_length = win_length
         # As `Parameter` because of utilities (e.g. `.to()`)
-        self.window = torch.nn.Parameter(torch.from_numpy(get_window(window, win_length, fftbins=True).astype(np.float32)))
+        self.window = torch.nn.Parameter(
+            torch.from_numpy(
+                get_window(window, win_length, fftbins=True).astype(np.float32)
+            )
+        )
 
     def inverse(self, magnitude, phase):
         """iSTFT."""
         complex_spectrogram = magnitude * torch.exp(phase * 1j)
-        inverse_transform = torch.istft(complex_spectrogram, self.filter_length, self.hop_length, self.win_length, window=self.window)
+        inverse_transform = torch.istft(
+            complex_spectrogram,
+            self.filter_length,
+            self.hop_length,
+            self.win_length,
+            window=self.window,
+        )
 
-        return inverse_transform.unsqueeze(-2)  # unsqueeze to stay consistent with conv_transpose1d implementation
+        return inverse_transform.unsqueeze(
+            -2
+        )  # unsqueeze to stay consistent with conv_transpose1d implementation
 
     def forward(self):
         # Not used
