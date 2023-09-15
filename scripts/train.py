@@ -62,8 +62,11 @@ def train(a, h):
     # Resume (1/3)
     os.makedirs(a.checkpoint_path, exist_ok=True)
     print("checkpoints directory : ", a.checkpoint_path)
+    original_stdout = sys.stdout
     with open(os.path.join(a.checkpoint_path, "generator.txt"), "w") as f:
-        f.write(generator)
+        sys.stdout = f
+        print(generator)
+        sys.stdout = original_stdout
     if os.path.isdir(a.checkpoint_path):
         cp_g = scan_checkpoint(a.checkpoint_path, "g_")
         cp_do = scan_checkpoint(a.checkpoint_path, "do_")
