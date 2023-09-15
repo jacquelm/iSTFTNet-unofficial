@@ -60,9 +60,10 @@ def train(a, h):
     ).to(device)
 
     # Resume (1/3)
-    print(generator)
     os.makedirs(a.checkpoint_path, exist_ok=True)
     print("checkpoints directory : ", a.checkpoint_path)
+    with open(os.path.join(a.checkpoint_path, "generator.txt"), "w") as f:
+        f.write(generator)
     if os.path.isdir(a.checkpoint_path):
         cp_g = scan_checkpoint(a.checkpoint_path, "g_")
         cp_do = scan_checkpoint(a.checkpoint_path, "do_")
@@ -159,12 +160,12 @@ def train(a, h):
     mpd.train()
     msd.train()
     for epoch in range(max(0, last_epoch), a.training_epochs):
-        #### Epoch ########################################################################
+        #### Epoch ####################################################################
         start = time.time()
         print(f"Epoch: {epoch+1}")
 
         for _, batch in enumerate(train_loader):
-            #### Step #####################################################################
+            #### Step #################################################################
             start_b = time.time()
             x, y, _, y_mel = batch
             x = x.to(device, non_blocking=True)
@@ -324,13 +325,13 @@ def train(a, h):
                 generator.train()
 
             steps += 1
-            #### /Step ####################################################################
+            #### /Step ################################################################
 
         scheduler_g.step()
         scheduler_d.step()
 
         print(f"Time taken for epoch {epoch+1} is {int(time.time() - start)} sec\n")
-        #### /Epoch #######################################################################
+        #### /Epoch ###################################################################
 
 
 def main():

@@ -1,0 +1,84 @@
+Generator(
+  (conv_pre): Conv1d(80, 512, kernel_size=(7,), stride=(1,), padding=(3,))
+  (ups): ModuleList(
+    (0): ConvTranspose1d(512, 256, kernel_size=(16,), stride=(8,), padding=(4,))
+    (1): ConvTranspose1d(256, 128, kernel_size=(16,), stride=(8,), padding=(4,))
+  )
+  (resblocks): ModuleList(
+    (0): ResBlock1(
+      (convs1): ModuleList(
+        (0): Conv1d(256, 256, kernel_size=(3,), stride=(1,), padding=(1,))
+        (1): Conv1d(256, 256, kernel_size=(3,), stride=(1,), padding=(3,), dilation=(3,))
+        (2): Conv1d(256, 256, kernel_size=(3,), stride=(1,), padding=(5,), dilation=(5,))
+      )
+      (convs2): ModuleList(
+        (0): Conv1d(256, 256, kernel_size=(3,), stride=(1,), padding=(1,))
+        (1): Conv1d(256, 256, kernel_size=(3,), stride=(1,), padding=(1,))
+        (2): Conv1d(256, 256, kernel_size=(3,), stride=(1,), padding=(1,))
+      )
+    )
+    (1): ResBlock1(
+      (convs1): ModuleList(
+        (0): Conv1d(256, 256, kernel_size=(7,), stride=(1,), padding=(3,))
+        (1): Conv1d(256, 256, kernel_size=(7,), stride=(1,), padding=(9,), dilation=(3,))
+        (2): Conv1d(256, 256, kernel_size=(7,), stride=(1,), padding=(15,), dilation=(5,))
+      )
+      (convs2): ModuleList(
+        (0): Conv1d(256, 256, kernel_size=(7,), stride=(1,), padding=(3,))
+        (1): Conv1d(256, 256, kernel_size=(7,), stride=(1,), padding=(3,))
+        (2): Conv1d(256, 256, kernel_size=(7,), stride=(1,), padding=(3,))
+      )
+    )
+    (2): ResBlock1(
+      (convs1): ModuleList(
+        (0): Conv1d(256, 256, kernel_size=(11,), stride=(1,), padding=(5,))
+        (1): Conv1d(256, 256, kernel_size=(11,), stride=(1,), padding=(15,), dilation=(3,))
+        (2): Conv1d(256, 256, kernel_size=(11,), stride=(1,), padding=(25,), dilation=(5,))
+      )
+      (convs2): ModuleList(
+        (0): Conv1d(256, 256, kernel_size=(11,), stride=(1,), padding=(5,))
+        (1): Conv1d(256, 256, kernel_size=(11,), stride=(1,), padding=(5,))
+        (2): Conv1d(256, 256, kernel_size=(11,), stride=(1,), padding=(5,))
+      )
+    )
+    (3): ResBlock1(
+      (convs1): ModuleList(
+        (0): Conv1d(128, 128, kernel_size=(3,), stride=(1,), padding=(1,))
+        (1): Conv1d(128, 128, kernel_size=(3,), stride=(1,), padding=(3,), dilation=(3,))
+        (2): Conv1d(128, 128, kernel_size=(3,), stride=(1,), padding=(5,), dilation=(5,))
+      )
+      (convs2): ModuleList(
+        (0): Conv1d(128, 128, kernel_size=(3,), stride=(1,), padding=(1,))
+        (1): Conv1d(128, 128, kernel_size=(3,), stride=(1,), padding=(1,))
+        (2): Conv1d(128, 128, kernel_size=(3,), stride=(1,), padding=(1,))
+      )
+    )
+    (4): ResBlock1(
+      (convs1): ModuleList(
+        (0): Conv1d(128, 128, kernel_size=(7,), stride=(1,), padding=(3,))
+        (1): Conv1d(128, 128, kernel_size=(7,), stride=(1,), padding=(9,), dilation=(3,))
+        (2): Conv1d(128, 128, kernel_size=(7,), stride=(1,), padding=(15,), dilation=(5,))
+      )
+      (convs2): ModuleList(
+        (0): Conv1d(128, 128, kernel_size=(7,), stride=(1,), padding=(3,))
+        (1): Conv1d(128, 128, kernel_size=(7,), stride=(1,), padding=(3,))
+        (2): Conv1d(128, 128, kernel_size=(7,), stride=(1,), padding=(3,))
+      )
+    )
+    (5): ResBlock1(
+      (convs1): ModuleList(
+        (0): Conv1d(128, 128, kernel_size=(11,), stride=(1,), padding=(5,))
+        (1): Conv1d(128, 128, kernel_size=(11,), stride=(1,), padding=(15,), dilation=(3,))
+        (2): Conv1d(128, 128, kernel_size=(11,), stride=(1,), padding=(25,), dilation=(5,))
+      )
+      (convs2): ModuleList(
+        (0): Conv1d(128, 128, kernel_size=(11,), stride=(1,), padding=(5,))
+        (1): Conv1d(128, 128, kernel_size=(11,), stride=(1,), padding=(5,))
+        (2): Conv1d(128, 128, kernel_size=(11,), stride=(1,), padding=(5,))
+      )
+    )
+  )
+  (reflection_pad): ReflectionPad1d((1, 0))
+  (conv_post): Conv1d(128, 18, kernel_size=(7,), stride=(1,), padding=(3,))
+)
+
