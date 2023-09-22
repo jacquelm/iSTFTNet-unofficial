@@ -15,7 +15,7 @@ Other simplification from 'tarepan/iSTFTNet-pytorch' (MIT License by Tarepan)
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
-from torch.nn import Conv1d, ConvTranspose1d, AvgPool1d, Conv2d
+from torch.nn import Conv1d, ConvTranspose1d, AvgPool1d, Conv2d, ConvTranspose2d
 from torch.nn.utils import weight_norm, remove_weight_norm, spectral_norm
 from einops import rearrange, reduce, repeat, unpack, pack
 from einops.layers.torch import Rearrange, EinMix
@@ -160,6 +160,69 @@ class ResBlock1(torch.nn.Module):
             remove_weight_norm(l)
 
 
+class ResBlock2D(torch.nn.Module):
+    """Big ResBlock."""
+
+    def __init__(self, channels, kernel_size=(3, 3), dilation=(1, 3, 5)):
+        """
+        Args:
+            channels - Constant size of channel dimension (frequency dimension)
+            kernel_size - Conv kernel size
+            dilation - Dilation factor of Res1/Res2/Res3's 1st Conv (2nd Conv is dilation=1)
+        """
+        super().__init__()
+
+        # 1st Conv of Res1/Res2/Res3
+        self.convs1 = nn.ModuleList(
+            [
+                weight_norm(
+                    Conv2d(
+                        channels,
+                        2 * channels,
+                        kernel_size,
+                        1,
+                        dilation=1,
+                        padding=get_padding(kernel_size, 1),
+                    )
+                ),
+            ]
+        )
+        self.convs1.apply(init_weights)
+
+        # 2nd Conv of Res1/Res2/Res3
+        self.convs2 = nn.ModuleList(
+            [
+                weight_norm(
+                    Conv2d(
+                        2 * channels,
+                        channels,
+                        kernel_size,
+                        1,
+                        dilation=1,
+                        padding=get_padding(kernel_size, 1),
+                    )
+                ),
+            ]
+        )
+        self.convs2.apply(init_weights)
+
+    def forward(self, x):
+        for c1, c2 in zip(self.convs1, self.convs2):
+            # Inner-most Res block: Res(LReLU-Conv-LReLU-Conv)
+            xt = F.leaky_relu(x, LRELU_SLOPE)
+            xt = c1(xt)
+            xt = F.leaky_relu(xt, LRELU_SLOPE)
+            xt = c2(xt)
+            x = xt + x
+        return x
+
+    def remove_weight_norm(self):
+        for l in self.convs1:
+            remove_weight_norm(l)
+        for l in self.convs2:
+            remove_weight_norm(l)
+
+
 class ResBlock2(torch.nn.Module):
     """Small ResBlock."""
 
@@ -187,6 +250,58 @@ class ResBlock2(torch.nn.Module):
                 ),
                 weight_norm(
                     Conv1d(
+                        channels,
+                        channels,
+                        kernel_size,
+                        1,
+                        dilation=dilation[1],
+                        padding=get_padding(kernel_size, dilation[1]),
+                    )
+                ),
+            ]
+        )
+        self.convs.apply(init_weights)
+
+    def forward(self, x):
+        for c in self.convs:
+            # Inner-most Res block : Res(LReLU-Conv)
+            xt = F.leaky_relu(x, LRELU_SLOPE)
+            xt = c(xt)
+            x = xt + x
+        return x
+
+    def remove_weight_norm(self):
+        for l in self.convs:
+            remove_weight_norm(l)
+
+
+class ResBlock2D2(torch.nn.Module):
+    """Small ResBlock."""
+
+    def __init__(self, channels, kernel_size=(3, 3), dilation=(1, 3)):
+        """
+        Args:
+            channels - Constant size of channel dimension (frequency dimension)
+            kernel_size - Conv kernel size
+            dilation - Dilation factor of Res1/Res2's Conv
+        """
+        super().__init__()
+
+        # The Conv of Res1/Res2
+        self.convs = nn.ModuleList(
+            [
+                weight_norm(
+                    Conv2d(
+                        channels,
+                        channels,
+                        kernel_size,
+                        1,
+                        dilation=dilation[0],
+                        padding=get_padding(kernel_size, dilation[0]),
+                    )
+                ),
+                weight_norm(
+                    Conv2d(
                         channels,
                         channels,
                         kernel_size,
@@ -463,6 +578,137 @@ class Generator(torch.nn.Module):
         x = F.leaky_relu(x)
         x = self.reflection_pad(x)
         x = self.conv_post(x)
+
+        # To STFT parameters :: (B, F=2f, T) -> (B, F=f, T)
+        spec = torch.exp(x[:, : self._center, :])
+        phase = torch.sin(x[:, self._center :, :])
+
+        return spec, phase
+
+    def remove_weight_norm(self):
+        for l in self.ups:
+            remove_weight_norm(l)
+        for l in self.resblocks:
+            l.remove_weight_norm()
+        remove_weight_norm(self.conv_pre)
+        remove_weight_norm(self.conv_post)
+
+
+class Generator2D(torch.nn.Module):
+    def __init__(self, h):
+        super().__init__()
+        self.num_kernels_time = len(h.resblock_time_kernel_sizes)
+        self.num_kernels_freq = len(h.resblock_freq_kernel_sizes)
+        self.num_upsamples_time = len(h.upsample_time_rates)
+        self.num_upsamples_freq = len(h.upsample_freq_rates)
+
+        # 1D #
+
+        # PreConv
+        self.conv_pre = weight_norm(
+            Conv1d(80, h.upsample_initial_channel[0], 7, 1, padding=3)
+        )
+
+        # MainStack
+        ## Upsampling
+        self.ups = nn.ModuleList()
+        for i, (u, k) in enumerate(
+            zip(h.upsample_time_rates, h.upsample_time_kernel_sizes)
+        ):
+            up = ConvTranspose1d(
+                h.upsample_initial_channel[0] // (2**i),
+                h.upsample_initial_channel[0] // (2 ** (i + 1)),
+                k,
+                u,
+                padding=(k - u) // 2,
+            )
+            self.ups.append(weight_norm(up))
+        self.ups.apply(init_weights)
+        ## MRF
+        resblock = ResBlock1 if h.resblock == "1" else ResBlock2
+        self.resblocks = nn.ModuleList()
+        for i in range(len(self.ups)):
+            ch = h.upsample_initial_channel[0] // (2 ** (i + 1))
+            for j, (k, d) in enumerate(
+                zip(h.resblock_time_kernel_sizes, h.resblock_dilation_sizes)
+            ):
+                self.resblocks.append(resblock(ch, k, d))
+
+        # PostConv :: (B, F, T) -> (B, F=2+nfft, T)
+        self.reflection_pad = torch.nn.ReflectionPad1d((1, 0))
+        self.conv_post = weight_norm(Conv1d(ch, h.gen_istft_n_fft + 2, 7, 1, padding=3))
+        self.conv_post.apply(init_weights)
+        self._center = h.gen_istft_n_fft // 2 + 1
+
+        # 2D #
+
+        # PreConv
+        self.conv_pre2D = weight_norm(
+            Conv2d(256, h.upsample_initial_channel[1], (3, 3), 1, padding=3)
+        )
+
+        # MainStack
+        ## Upsampling
+        self.ups2D = nn.ModuleList()
+        for i, (u, k) in enumerate(zip(h.upsample_rates, h.upsample_freq_kernel_sizes)):
+            up = ConvTranspose2d(
+                h.upsample_initial_channel[1] // (2**i),
+                h.upsample_initial_channel[1] // (2 ** (i + 1)),
+                k,
+                u,
+                padding=(k - u) // 2,
+            )
+            self.ups2D.append(weight_norm(up))
+        self.ups2D.apply(init_weights)
+        ## MRF
+        resblock2D = ResBlock2D if h.resblock == "1" else ResBlock2D2
+        self.resblocks2D = nn.ModuleList()
+        for i in range(len(self.ups)):
+            ch = h.upsample_initial_channel[1] // (2 ** (i + 1))
+            for j, (k, d) in enumerate(
+                zip(h.resblock_freq_kernel_sizes, h.resblock_dilation_sizes)
+            ):
+                self.resblocks.append(resblock2D(ch, k, d))
+
+    def forward(self, x):
+        """
+        Returns:
+            spec  :: (B, F, T) - Linear amplitude (TODO: power? amplitude?)
+            phase :: (B, F, T) - Phase
+        """
+        # 1D #
+        # PreConv
+        x = self.conv_pre(x)
+
+        # Stack of "UpSampling + MRF"
+        for i in range(self.num_upsamples_time):
+            x = F.leaky_relu(x, LRELU_SLOPE)
+            x = self.ups[i](x)
+            xs = None
+            for j in range(self.num_kernels_time):
+                if xs is None:
+                    xs = self.resblocks[i * self.num_kernels_time + j](x)
+                else:
+                    xs += self.resblocks[i * self.num_kernels_time + j](x)
+            x = xs / self.num_kernels_time
+
+        # PostConv
+        x = F.leaky_relu(x)
+        x = self.reflection_pad(x)
+        x = self.conv_post(x)
+
+        # 2D #
+        xs = None
+        for j in range(self.num_kernels_freq):
+            if xs is None:
+                xs = self.resblocks[i * self.num_kernels_freq + j](x)
+            else:
+                xs += self.resblocks[i * self.num_kernels_freq + j](x)
+        x = xs / self.num_kernels_freq
+
+        for i in range(self.num_upsamples_freq):
+            x = F.leaky_relu(x, LRELU_SLOPE)
+            x = self.ups[i](x)
 
         # To STFT parameters :: (B, F=2f, T) -> (B, F=f, T)
         spec = torch.exp(x[:, : self._center, :])
