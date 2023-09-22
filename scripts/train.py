@@ -26,6 +26,7 @@ else:
 from meldataset import MelDataset, mel_spectrogram, get_dataset_filelist
 from models import (
     Generator,
+    Generator2D,
     MultiPeriodDiscriminator,
     MultiScaleDiscriminator,
     feature_loss,
@@ -50,7 +51,10 @@ def train(a, h):
     device = torch.device("cuda")
 
     # Model
-    generator = Generator(h).to(device)
+    if h.model == "istftnetv2":
+        generator = Generator2D(h).to(device)
+    else:
+        generator = Generator(h).to(device)
     mpd = MultiPeriodDiscriminator().to(device)
     msd = MultiScaleDiscriminator().to(device)
     stft = TorchSTFT(
