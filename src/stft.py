@@ -44,7 +44,7 @@ class TorchSTFT(torch.nn.Module):
             torch.from_numpy(
                 get_window(window, win_length, fftbins=True).astype(np.float32)
             )
-        )
+        ).cuda()
 
     def inverse(self, magnitude, phase):
         """iSTFT."""
