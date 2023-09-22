@@ -650,7 +650,9 @@ class Generator2D(torch.nn.Module):
         # MainStack
         ## Upsampling
         self.ups2D = nn.ModuleList()
-        for i, (u, k) in enumerate(zip(h.upsample_rates, h.upsample_freq_kernel_sizes)):
+        for i, (u, k) in enumerate(
+            zip(h.upsample_freq_rates, h.upsample_freq_kernel_sizes)
+        ):
             up = ConvTranspose2d(
                 h.upsample_initial_channel[1] // (2**i),
                 h.upsample_initial_channel[1] // (2 ** (i + 1)),
