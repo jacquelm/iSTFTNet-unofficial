@@ -18,7 +18,13 @@ Model `C8C8I` is implemented.
 
 ## Training
 ```bash
-python train.py --config config_v1.json
+python scripts/train.py --config configs/config_v1.json
+```
+For more advanced user : 
+```bash
+python scripts/train.py --config configs/istftnet/config_v4.json --input_wavs_dir data/VCTK/wavs --input_training_file data/VCTK/train.txt --input_validation_file data/VCTK/val.txt --checkpoint_path checkpoints/cp_istftnet_16khz --ext flac --checkpoint_interval 100000
+
+
 ```
 
 ## Citations
