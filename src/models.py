@@ -655,7 +655,7 @@ class Generator2D(torch.nn.Module):
         #     Conv2d(ch // 2, h.upsample_initial_channel[1], (3, 3), 1, padding=3)
         # )
         self.conv_pre2D = weight_norm(
-            Conv2d(ch // 2, h.upsample_initial_channel[1], (3, 3))
+            Conv2d(ch // 2, h.upsample_initial_channel[1], (3, 3), (4, 0.5))
         )
 
         # MainStack
