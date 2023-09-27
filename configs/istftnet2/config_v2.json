@@ -63,7 +63,7 @@
         ]
     ],
     "gen_istft_n_fft": 64,
-    "gen_istft_hop_size": 16,
+    "gen_istft_hop_size": 8,
     "segment_size": 8192,
     "num_mels": 80,
     "n_fft": 1024,
