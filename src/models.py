@@ -644,7 +644,7 @@ class Generator2D(torch.nn.Module):
 
         # PostConv :: (B, F, T) -> (B, F=2+nfft, T)
         self.reflection_pad = torch.nn.ReflectionPad1d((1, 0))
-        self.conv_post = weight_norm(Conv1d(ch, h.gen_istft_n_fft + 2, 7, 1, padding=3))
+        self.conv_post = weight_norm(Conv1d(ch, ch // 2, 7, 1, padding=3))
         self.conv_post.apply(init_weights)
         self._center = h.gen_istft_n_fft // 2 + 1
 
@@ -708,9 +708,10 @@ class Generator2D(torch.nn.Module):
         # PostConv
         x = F.leaky_relu(x)
         print("relu", x.shape)
-        x = self.reflection_pad(x)
-        print("pad", x.shape)
+        # x = self.reflection_pad(x)
         x = self.conv_post(x)
+        print("conv post", x.shape)
+        x = torch.reshape(x, [x.shape[0], x.shape[1] // 2, x.shape[1] // 2, x.shape[2]])
         print("1D 2D", x.shape)
 
         # 2D #
