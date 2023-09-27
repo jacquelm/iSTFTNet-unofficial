@@ -733,7 +733,7 @@ class Generator2D(torch.nn.Module):
 
         for i in range(self.num_upsamples_freq):
             x = F.leaky_relu(x, LRELU_SLOPE)
-            x = self.ups[i](x)
+            x = self.ups2[i](x)
         print("upsample 2D", x.shape)
 
         # To STFT parameters :: (B, F=2f, T) -> (B, F=f, T)
@@ -745,7 +745,11 @@ class Generator2D(torch.nn.Module):
     def remove_weight_norm(self):
         for l in self.ups:
             remove_weight_norm(l)
+        for l in self.ups2D:
+            remove_weight_norm(l)
         for l in self.resblocks:
+            l.remove_weight_norm()
+        for l in self.resblocks2D:
             l.remove_weight_norm()
         remove_weight_norm(self.conv_pre)
         remove_weight_norm(self.conv_post)
