@@ -669,8 +669,7 @@ class Generator2D(torch.nn.Module):
                 h.upsample_initial_channel[1] // (2 ** (i + 1)),
                 k,
                 (u, 1),
-                padding=((k[1] - u) // 2, k[0] - u),
-                output_padding=(1, -1),
+                padding=((k[0] - u) // 2, k[1] - u),
             )
             self.ups2D.append(weight_norm(up))
         self.ups2D.apply(init_weights)

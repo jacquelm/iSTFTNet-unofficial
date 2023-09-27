@@ -20,16 +20,16 @@
     ],
     "upsample_freq_kernel_sizes": [
         [
-            3,
-            4
+            4,
+            3
         ],
         [
-            3,
-            4
+            4,
+            3
         ],
         [
-            3,
-            4
+            4,
+            3
         ]
     ],
     "upsample_initial_channel": [
