@@ -736,6 +736,8 @@ class Generator2D(torch.nn.Module):
             x = self.ups2D[i](x)
             # print("upsample 2D", x.shape)
 
+        x = self.reflection_pad(x)
+
         # To STFT parameters :: (B, F=2f, T) -> (B, F=f, T)
         spec = torch.exp(x[:, 0, :, :])
         phase = torch.sin(x[:, 1, :, :])
