@@ -688,7 +688,9 @@ class Generator2D(torch.nn.Module):
         """
         # 1D #
         # PreConv
+        print("Mel spec", x.shape)
         x = self.conv_pre(x)
+        print("Input 1D", x.shape)
 
         # Stack of "UpSampling + MRF"
         for i in range(self.num_upsamples_time):
@@ -701,11 +703,13 @@ class Generator2D(torch.nn.Module):
                 else:
                     xs += self.resblocks[i * self.num_kernels_time + j](x)
             x = xs / self.num_kernels_time
+        print("Bloc 1D", x.shape)
 
         # PostConv
         x = F.leaky_relu(x)
         x = self.reflection_pad(x)
         x = self.conv_post(x)
+        print("1D 2D", x.shape)
 
         # 2D #
         xs = None
