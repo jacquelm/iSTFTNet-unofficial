@@ -677,7 +677,8 @@ class Generator2D(torch.nn.Module):
         resblock2D = ResBlock2D if h.resblock == "1" else ResBlock2D2
         self.resblocks2D = nn.ModuleList()
         for i in range(len(self.ups)):
-            ch = h.upsample_initial_channel[1] // (2 ** (i + 1))
+            # ch = h.upsample_initial_channel[1] // (2 ** (i + 1))
+            ch = h.upsample_initial_channel[1]
             for j, (k, d) in enumerate(
                 zip(h.resblock_freq_kernel_sizes, h.resblock_dilation_sizes)
             ):
