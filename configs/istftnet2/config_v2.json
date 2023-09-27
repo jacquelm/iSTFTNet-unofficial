@@ -11,7 +11,9 @@
         8
     ],
     "upsample_freq_rates": [
-        8
+        2,
+        2,
+        2
     ],
     "upsample_time_kernel_sizes": [
         16
