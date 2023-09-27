@@ -692,9 +692,9 @@ class Generator2D(torch.nn.Module):
         """
         # 1D #
         # PreConv
-        print("Mel spec", x.shape)
+        # print("Mel spec", x.shape)
         x = self.conv_pre(x)
-        print("Input 1D", x.shape)
+        # print("Input 1D", x.shape)
 
         # Stack of "UpSampling + MRF"
         for i in range(self.num_upsamples_time):
@@ -707,21 +707,21 @@ class Generator2D(torch.nn.Module):
                 else:
                     xs += self.resblocks[i * self.num_kernels_time + j](x)
             x = xs / self.num_kernels_time
-        print("Bloc 1D", x.shape)
+        # print("Bloc 1D", x.shape)
 
         # PostConv
         x = F.leaky_relu(x)
-        print("relu", x.shape)
+        # print("relu", x.shape)
         # x = self.reflection_pad(x)
         x = self.conv_post(x)
-        print("conv post", x.shape)
+        # print("conv post", x.shape)
         x = torch.reshape(x, [x.shape[0], x.shape[1] // 2, 2, x.shape[2]])
-        print("1D 2D", x.shape)
+        # print("1D 2D", x.shape)
 
         # 2D #
         # PreConv
         x = self.conv_pre2D(x)
-        print("input 2D", x.shape)
+        # print("input 2D", x.shape)
         xs = None
         for j in range(self.num_kernels_freq):
             if xs is None:
@@ -729,14 +729,12 @@ class Generator2D(torch.nn.Module):
             else:
                 xs += self.resblocks2D[i * self.num_kernels_freq + j](x)
         x = xs / self.num_kernels_freq
-        print("block 2D", x.shape)
+        # print("block 2D", x.shape)
 
         for i in range(self.num_upsamples_freq):
             x = F.leaky_relu(x, LRELU_SLOPE)
             x = self.ups2D[i](x)
-            print("upsample 2D", x.shape)
-
-        print("upsample 2D", x.shape)
+            # print("upsample 2D", x.shape)
 
         # To STFT parameters :: (B, F=2f, T) -> (B, F=f, T)
         spec = torch.exp(x[:, 0, :, :])

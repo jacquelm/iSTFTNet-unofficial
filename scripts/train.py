@@ -221,6 +221,12 @@ def train(a, h):
             # Forward
             _, y_df_hat_g, fmap_f_r, fmap_f_g = mpd(y, y_g_hat)
             _, y_ds_hat_g, fmap_s_r, fmap_s_g = msd(y, y_g_hat)
+            print("Disc Per sig", y_df_hat_g.shape)
+            print("Disc Per real", fmap_f_r.shape)
+            print("Disc Per gen", fmap_f_g.shape)
+            print("Disc Amp sig", y_ds_hat_g.shape)
+            print("Disc Amp real", fmap_s_r.shape)
+            print("Disc Amp gen", fmap_s_g.shape)
             # Loss
             loss_fm_f = feature_loss(fmap_f_r, fmap_f_g)
             loss_fm_s = feature_loss(fmap_s_r, fmap_s_g)
