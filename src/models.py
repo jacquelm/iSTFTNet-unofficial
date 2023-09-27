@@ -711,7 +711,7 @@ class Generator2D(torch.nn.Module):
         # x = self.reflection_pad(x)
         x = self.conv_post(x)
         print("conv post", x.shape)
-        x = torch.reshape(x, [x.shape[0], x.shape[1] // 2, x.shape[1] // 2, x.shape[2]])
+        x = torch.reshape(x, [x.shape[0], x.shape[1] // 2, 2, x.shape[2]])
         print("1D 2D", x.shape)
 
         # 2D #
