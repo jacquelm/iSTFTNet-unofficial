@@ -670,7 +670,7 @@ class Generator2D(torch.nn.Module):
                 k,
                 (u, 1),
                 padding=(k[1] - u) // 2,
-                output_padding=1,
+                output_padding=(1, 0),
             )
             self.ups2D.append(weight_norm(up))
         self.ups2D.apply(init_weights)
