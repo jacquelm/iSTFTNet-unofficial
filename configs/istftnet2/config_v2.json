@@ -31,8 +31,8 @@
         ]
     ],
     "upsample_initial_channel": [
-        512,
-        256
+        64,
+        16
     ],
     "resblock_time_kernel_sizes": [
         3,
