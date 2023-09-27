@@ -62,11 +62,11 @@
             5
         ]
     ],
-    "gen_istft_n_fft": 16,
-    "gen_istft_hop_size": 4,
+    "gen_istft_n_fft": 64,
+    "gen_istft_hop_size": 16,
     "segment_size": 8192,
     "num_mels": 80,
-    "n_fft": 64,
+    "n_fft": 1024,
     "hop_size": 256,
     "win_size": 1024,
     "sampling_rate": 16000,
