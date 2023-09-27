@@ -733,7 +733,7 @@ class Generator2D(torch.nn.Module):
 
         for i in range(self.num_upsamples_freq):
             x = F.leaky_relu(x, LRELU_SLOPE)
-            x = self.ups2[i](x)
+            x = self.ups2D[i](x)
         print("upsample 2D", x.shape)
 
         # To STFT parameters :: (B, F=2f, T) -> (B, F=f, T)
