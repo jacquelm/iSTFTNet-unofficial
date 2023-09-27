@@ -200,6 +200,11 @@ def train(a, h):
                 h.fmax_for_loss,
             )
 
+            print("Spec", spec.shape)
+            print("Phase", phase.shape)
+            print("Est sig", y_g_hat.shape)
+            print("Est mel", y_g_hat_mel.shape)
+
             #### Discriminators ##########################################
             optim_d.zero_grad()
             # Forard
