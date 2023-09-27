@@ -199,7 +199,7 @@ def train(a, h):
                 h.fmin,
                 h.fmax_for_loss,
             )
-
+            print("Input", x.shape)
             print("Spec", spec.shape)
             print("Phase", phase.shape)
             print("Est sig", y_g_hat.shape)
