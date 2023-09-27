@@ -707,7 +707,9 @@ class Generator2D(torch.nn.Module):
 
         # PostConv
         x = F.leaky_relu(x)
+        print("relu", x.shape)
         x = self.reflection_pad(x)
+        print("pad", x.shape)
         x = self.conv_post(x)
         print("1D 2D", x.shape)
 
@@ -725,8 +727,8 @@ class Generator2D(torch.nn.Module):
             x = self.ups[i](x)
 
         # To STFT parameters :: (B, F=2f, T) -> (B, F=f, T)
-        spec = torch.exp(x[:, : self._center, :])
-        phase = torch.sin(x[:, self._center :, :])
+        spec = torch.exp(x[:, 0, :, :])
+        phase = torch.sin(x[:, 1, :, :])
 
         return spec, phase
 
