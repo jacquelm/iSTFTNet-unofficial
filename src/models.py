@@ -644,7 +644,7 @@ class Generator2D(torch.nn.Module):
 
         # PostConv :: (B, F, T) -> (B, F=2+nfft, T)
         self.reflection_pad = torch.nn.ReflectionPad1d((1, 0))
-        self.conv_post = weight_norm(Conv1d(ch, ch // 2, 7, 1, padding=3))
+        self.conv_post = weight_norm(Conv1d(ch, ch, 7, 1, padding=3))
         self.conv_post.apply(init_weights)
         self._center = h.gen_istft_n_fft // 2 + 1
 
