@@ -757,6 +757,57 @@ class Generator2D(torch.nn.Module):
         remove_weight_norm(self.conv_post)
 
 
+class GeneratorConf(torch.nn.Module):
+    def __init__(self, h):
+        super().__init__()
+        self.num_kernels = len(h.resblock_kernel_sizes)
+        self.num_upsamples = len(h.upsample_rates)
+
+        # PreConv
+        self.conv_pre = weight_norm(
+            Conv1d(80, h.upsample_initial_channel, 7, 1, padding=3)
+        )
+
+        # MainStack
+        # TODO : add conformer block with respect to lightvoc paper
+
+        # PostConv :: (B, F, T) -> (B, F=2+nfft, T)
+        self.reflection_pad = torch.nn.ReflectionPad1d((1, 0))
+        self.conv_post = weight_norm(Conv1d(ch, h.gen_istft_n_fft + 2, 7, 1, padding=3))
+        self.conv_post.apply(init_weights)
+        self._center = h.gen_istft_n_fft // 2 + 1
+
+    def forward(self, x):
+        """
+        Returns:
+            spec  :: (B, F, T) - Linear amplitude (TODO: power? amplitude?)
+            phase :: (B, F, T) - Phase
+        """
+        # PreConv
+        x = self.conv_pre(x)
+
+        # TODO : add conformer part
+
+        # PostConv
+        x = F.leaky_relu(x)
+        x = self.reflection_pad(x)
+        x = self.conv_post(x)
+
+        # To STFT parameters :: (B, F=2f, T) -> (B, F=f, T)
+        spec = torch.exp(x[:, : self._center, :])
+        phase = torch.sin(x[:, self._center :, :])
+
+        return spec, phase
+
+    def remove_weight_norm(self):
+        for l in self.ups:
+            remove_weight_norm(l)
+        for l in self.resblocks:
+            l.remove_weight_norm()
+        remove_weight_norm(self.conv_pre)
+        remove_weight_norm(self.conv_post)
+
+
 class DiscriminatorP(torch.nn.Module):
     def __init__(self, period, kernel_size=5, stride=3, use_spectral_norm=False):
         super(DiscriminatorP, self).__init__()

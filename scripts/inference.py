@@ -43,7 +43,7 @@ def inference(a, h, device):
     generator.remove_weight_norm()
     with torch.no_grad():
         for _, filname in enumerate(filelist):
-            wav, _ = load_wav(os.path.join(a.input_wavs_dir, filname))
+            wav, _ = load_wav(os.path.join(a.input_wavs_dir, filname), sr=16000)
             wav = wav / MAX_WAV_VALUE
             wav = torch.FloatTensor(wav).to(device)
             x = mel_spectrogram(
