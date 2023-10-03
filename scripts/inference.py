@@ -19,13 +19,13 @@ else:
     )
 
 from meldataset import mel_spectrogram, MAX_WAV_VALUE
-from models import Generator
+from models import Generator, Generator2D
 from stft import TorchSTFT
 from utils import load_wav, AttrDict, load_checkpoint
 
 
 def inference(a, h, device):
-    generator = Generator(h).to(device)
+    generator = Generator2D(h).to(device)
     stft = TorchSTFT(
         filter_length=h.gen_istft_n_fft,
         hop_length=h.gen_istft_hop_size,
